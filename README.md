@@ -50,7 +50,7 @@ To handle varying text densities or large skipped sections, the script runs the 
 
 **Scoring & Output**
 - **Edit Distance:** Calculates the exact number of insertions, deletions, and substitutions between the HTR line and the matched Reference string.
-- **CER (Character Error Rate):** Calculated as Edit Distance / Reference Length.
+- **CER (Character Error Rate):** Calculated as `Edit Distance / Reference Length`.
 - **Global Summary:** Aggregates these stats per file to provide a high-level quality assessment (e.g., "M15.txt has 5.1% CER").
 
 ---
