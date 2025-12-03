@@ -3,11 +3,11 @@
 
 This repository contains utilities for:
 
+- Manual PDF inspection and labeling
 - Converting handwritten PDFs to page images suitable for HTR processing  
-- Running fuzzy text alignment between HTR output and reference DOCX transcriptions  
-- Matching TXT and DOCX files when filenames / metadata do not agree  
 - Merging HTR page outputs into single documents  
-- Supporting manual PDF inspection and labeling
+- Matching TXT and DOCX files when filenames / metadata do not agree  
+- Running fuzzy text alignment between HTR output and reference DOCX transcriptions  
 
 The tools are designed for large collections of handwritten material where:
 
@@ -16,36 +16,7 @@ The tools are designed for large collections of handwritten material where:
 - Full global alignment is too slow or memory-intensive  
 - Local fuzzy search is a more robust and practical alternative
 
----
-
-## 📦 Installation
-
-Clone the repository:
-
-```bash
-git clone https://github.com/fjohan/htr-fuzzy.git
-cd htr-fuzzy
-```
-
-Create and activate a Python environment:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Key libraries used:
-
-- `python-docx` — extract text from DOCX
-- `regex` — fuzzy matching with approximate search and timeout support
-- `pillow` / `pdf2image` — PDF→image conversion
-- `tqdm` — progress bars
+These tools make it possible to align handwritten PDF material with their DOCX transcriptions, even when structure and metadata do not match. This enables the creation of high-quality paired text regions that can be used as training data for continued refinement of HTR systems.
 
 ---
 
@@ -66,25 +37,21 @@ Many HTR workflows output one text file per page. This script concatenates these
 ---
 
 ### 2. `fuzzysearch_docx.py`  
-**Perform line-by-line fuzzy matching between HTR output and DOCX transcriptions.**
+**The Core Logic: Anchored Sliding Window**
 
-This is the *core* alignment tool.
+The script aligns fragmented HTR lines against a continuous DOCX stream without loading the entire text into memory for every search.
+- **Anchor:** It maintains a "cursor" index in the Reference text.
+- **Search Window:** For each HTR line, it projects a limited window (e.g., 400 characters) starting from the cursor.
+- **Fuzzy Search:** It uses bit-parallel approximate matching (Levenshtein distance) to find the HTR line within that specific window.
+- **Update:** When a match is found, the cursor moves to the end of the match, ensuring the next search starts at the correct relative position.
 
-It uses:
+**Optimization (Window Tournament)**
+To handle varying text densities or large skipped sections, the script runs the alignment multiple times with different **search window sizes** (defined by the user). It automatically selects the "winner" based on the highest number of aligned lines and lowest Global CER.
 
-- **Per-line fuzzy regex search**  
-- **Forward search window** to reduce runtime  
-- **Gated anchors**: the reference pointer only moves if the match is good  
-- **Timeout protection** to skip lines that take too long  
-- **CER scoring**  
-- Optional filtering  
-- Global summary output
-
-This script identifies:
-
-- Best matching substring in the DOCX for each HTR line  
-- Edit distance, CER  
-- Anchored alignment across long manuscripts  
+**Scoring & Output**
+- **Edit Distance:** Calculates the exact number of insertions, deletions, and substitutions between the HTR line and the matched Reference string.
+- **CER (Character Error Rate):** Calculated as Edit Distance / Reference Length.
+- **Global Summary:** Aggregates these stats per file to provide a high-level quality assessment (e.g., "M15.txt has 5.1% CER").
 
 ---
 
