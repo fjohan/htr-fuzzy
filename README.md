@@ -130,30 +130,93 @@ Useful for:
 
 ## 🧪 Typical Workflow
 
-### 1. Convert PDF → JPG
+The typical workflow for processing handwritten manuscripts with HTR is:
+
+---
+
+### **1. Determine document type (manual inspection)**  
+Inspect the PDF to understand its structure and whether it contains handwritten pages:
 
 ```bash
-python pdf2jpg_handwritten_only.py input.pdf output_dir/
+python pdf_manual_viewer.py manuscript.pdf
 ```
 
-### 2. Run HTR  
-(Using your preferred engine, e.g., `htrflow`.)
+Use this step to identify:
 
-### 3. Merge HTR page outputs
+- Whether pages contain handwriting  
+- Rotation or orientation issues  
+- Pages that should be skipped or flagged before HTR  
+
+---
+
+### **2. Convert PDF → JPEG pages**  
+Prepare clean, well-oriented images for the HTR engine:
 
 ```bash
-python concat_htr_pages.py htr_pages/ combined/M_110.txt
+python pdf2jpg_handwritten_only.py manuscript.pdf output_images/
 ```
 
-### 4. Match TXT ↔ DOCX files
+This step:
+
+- Extracts each page as a JPEG  
+- Ensures consistent resolution & formatting for HTR models  
+
+---
+
+### **3. Run HTR (external step)**  
+Use your preferred HTR engine (e.g., *htrflow*) on the generated images.  
+This produces **one TXT file per page**.
+
+---
+
+### **4. Join HTR page outputs into a single TXT file**
+
+```bash
+python concat_htr_pages.py output_images/ combined/M_110.txt
+```
+
+This merges page-level TXT files into a continuous transcription suitable for alignment.
+
+---
+
+### **5. Match TXT files to DOCX transcriptions**
 
 ```bash
 python match_txt_to_docx.py   --txt-dir combined/   --docx-dir transcriptions/   --out txt_docx_matches.csv
 ```
 
-### 5. Fuzzy-align HTR output with DOCX reference
+Since filenames often don’t match perfectly across datasets, this tool:
+
+- Extracts `M_number` identifiers  
+- Resolves mismatches  
+- Produces a mapping CSV used by the alignment scripts  
+
+Example row:
+
+```
+range_dir;M_number;txt_path;docx_path
+00001-00500;110;combined/M 110 s 1-9.txt;00001-00500/Transkriberade/wordformat/M110.docx
+```
+
+---
+
+### **6. Fuzzy-align HTR output with DOCX text**
 
 ```bash
-python fuzzysearch_docx.py   --matches txt_docx_matches.csv   --m-number 110   --cer-threshold 0.15   --anchor-cer 0.30   --window-chars 2000   --search-timeout 0.2   --summary-csv M110_alignment_summary.csv
+python fuzzysearch_docx.py --index txt_docx_matches.csv --window-lengths '400,1000,5000' --output test.csv --match-output match.csv --verbose
 ```
+
+This script performs:
+
+- **Fuzzy line-by-line matching** of HTR lines against the DOCX text  
+- **CER scoring**, per-line statistics, and global evaluation summary  
+
+Outputs include:
+
+- Best matching substring for each HTR line  
+- Edit distance and CER  
+- Global CER for the whole document  
+- Optional CSV summary  
+
+---
 
