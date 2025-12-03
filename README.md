@@ -157,33 +157,3 @@ python match_txt_to_docx.py   --txt-dir combined/   --docx-dir transcriptions/  
 python fuzzysearch_docx.py   --matches txt_docx_matches.csv   --m-number 110   --cer-threshold 0.15   --anchor-cer 0.30   --window-chars 2000   --search-timeout 0.2   --summary-csv M110_alignment_summary.csv
 ```
 
----
-
-## 📁 Repository Structure
-
-```
-htr-fuzzy/
-│
-├── concat_htr_pages.py
-├── fuzzysearch_docx.py
-├── match_txt_to_docx.py
-├── pdf2jpg_handwritten_only.py
-├── pdf_manual_viewer.py
-├── requirements.txt
-└── README.md
-```
-
----
-
-## 📝 Citation & Credits
-
-If you use this work in academic research, please cite:
-
-**F. Johan et al., “HTR-Fuzzy: Robust Line-Based Fuzzy Alignment for Handwritten Manuscripts” (2024).**
-
----
-
-## 🤝 Contributing
-
-Pull requests are welcome.  
-For feature requests, improvements, or questions, please open an issue.
