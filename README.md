@@ -37,21 +37,16 @@ Many HTR workflows output one text file per page. This script concatenates these
 ---
 
 ### 2. `fuzzysearch_docx.py`  
-**The Core Logic: Anchored Sliding Window**
+**Levenshtein-based approximate string matching**
 
 The script aligns fragmented HTR lines against a continuous DOCX stream without loading the entire text into memory for every search.
-- **Anchor:** It maintains a "cursor" index in the Reference text.
-- **Search Window:** For each HTR line, it projects a limited window (e.g., 400 characters) starting from the cursor.
-- **Fuzzy Search:** It uses bit-parallel approximate matching (Levenshtein distance) to find the HTR line within that specific window.
-- **Update:** When a match is found, the cursor moves to the end of the match, ensuring the next search starts at the correct relative position.
-
-**Optimization (Window Tournament)**
 To handle varying text densities or large skipped sections, the script runs the alignment multiple times with different **search window sizes** (defined by the user). It automatically selects the "winner" based on the highest number of aligned lines and lowest Global CER.
 
-**Scoring & Output**
-- **Edit Distance:** Calculates the exact number of insertions, deletions, and substitutions between the HTR line and the matched Reference string.
-- **CER (Character Error Rate):** Calculated as `Edit Distance / Reference Length`.
-- **Global Summary:** Aggregates these stats per file to provide a high-level quality assessment (e.g., "M15.txt has 5.1% CER").
+- **Anchored Sliding Window:** Matches fragmented HTR lines against a continuous DOCX stream using a moving "cursor" to maintain position.
+- **Levenshtein-based Fuzzy Search:** Finds the best matching substring within a specific "edit distance" (insertions, deletions, substitutions).
+- **Window Optimization:** Runs a "tournament" of different window sizes to maximize the match count.
+- **CER Scoring:** Calculates Character Error Rate based on the Levenshtein distance between the HTR line and the matched Reference text.
+- **Global Summary:** Aggregates statistics to score the quality of the HTR output.
 
 ---
 
